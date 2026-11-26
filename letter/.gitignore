@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -42,9 +43,21 @@ next-env.d.ts
 
 # local env files
 .env.local
+.env.example
 
 # vercel ignore
 .vercelignore
 
 # varios
 letter\docs
+
+# Variables de entorno locales (mantener .env.example)
+.env
+.env*.local
+
+# Configuración y memoria de agentes / skills locales
+AGENTS.md
+STATUS.md
+.agents/
+docs/stitch/
+graphify-out/
