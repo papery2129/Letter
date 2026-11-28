@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import type { CSSProperties, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { verifyAccess } from "@/app/actions/unlock";
+import EmberField from "@/components/EmberField";
 import {
   ArrowForwardIcon,
   BackspaceIcon,
@@ -13,32 +14,6 @@ import {
 interface AccessFormProps {
   onUnlock: (content: string) => void;
 }
-
-type CSSVariables = CSSProperties & Record<`--${string}`, string | number>;
-
-interface Particle {
-  size: number;
-  left: string;
-  color: string;
-  glow: string;
-  opacity: number;
-  driftX: number;
-  duration: number;
-  delay: number;
-}
-
-const PARTICLES: readonly Particle[] = [
-  { size: 2, left: "14%", color: "#6ad6e6", glow: "106,214,230", opacity: 0.22, driftX: 18, duration: 19, delay: 1 },
-  { size: 1.5, left: "28%", color: "#ffb3ae", glow: "255,179,174", opacity: 0.18, driftX: -14, duration: 23, delay: 4 },
-  { size: 2.5, left: "42%", color: "#f4f6f8", glow: "244,246,248", opacity: 0.24, driftX: 10, duration: 21, delay: 0 },
-  { size: 1, left: "56%", color: "#1b9aaa", glow: "27,154,170", opacity: 0.2, driftX: -20, duration: 26, delay: 6 },
-  { size: 2, left: "70%", color: "#ffb597", glow: "255,181,151", opacity: 0.16, driftX: 15, duration: 20, delay: 8 },
-  { size: 1.5, left: "84%", color: "#6ad6e6", glow: "106,214,230", opacity: 0.22, driftX: -16, duration: 24, delay: 3 },
-  { size: 2, left: "20%", color: "#f4f6f8", glow: "244,246,248", opacity: 0.18, driftX: 8, duration: 28, delay: 11 },
-  { size: 1, left: "64%", color: "#ffb3ae", glow: "255,179,174", opacity: 0.15, driftX: -10, duration: 22, delay: 14 },
-  { size: 2, left: "92%", color: "#6ad6e6", glow: "106,214,230", opacity: 0.2, driftX: 12, duration: 25, delay: 7 },
-  { size: 1.5, left: "8%", color: "#f4f6f8", glow: "244,246,248", opacity: 0.19, driftX: 6, duration: 27, delay: 16 },
-];
 
 const FALLBACK_ERROR = "No pudimos abrir la carta. Inténtalo de nuevo.";
 
@@ -79,31 +54,7 @@ export default function AccessForm({ onUnlock }: AccessFormProps) {
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_40%,rgba(163,22,33,0.12),transparent_70%)]"
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none"
-      >
-        {PARTICLES.map((particle, index) => {
-          const style: CSSVariables = {
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            bottom: "-10px",
-            left: particle.left,
-            backgroundColor: particle.color,
-            boxShadow: `0 0 6px rgba(${particle.glow},0.8)`,
-            "--p-op": particle.opacity,
-            "--drift-x": `${particle.driftX}px`,
-            animation: `float-drift ${particle.duration}s cubic-bezier(0.4,0,0.2,1) infinite ${particle.delay}s`,
-          };
-          return (
-            <div
-              key={index}
-              className="particle-item absolute rounded-full"
-              style={style}
-            />
-          );
-        })}
-      </div>
+      <EmberField />
 
       <div className="relative z-10 flex min-h-screen w-full items-center justify-center p-space-md">
         <div className="relative flex w-full flex-col items-center justify-center p-gutter">

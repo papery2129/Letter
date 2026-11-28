@@ -158,19 +158,37 @@
   }
 }
 
-/* Partículas flotantes: duración y retardo se fijan por partícula (inline). */
-@keyframes float-drift {
+/* Brasas de fondo: duración, retardo, vaivén y titileo se fijan por partícula (inline). */
+@keyframes ember-rise {
   0% {
-    transform: translateY(0) translateX(0);
+    transform: translateY(0) scale(1);
     opacity: 0;
   }
-  15%,
-  80% {
+  10%,
+  75% {
     opacity: var(--p-op, 0.2);
   }
   100% {
-    transform: translateY(-100vh) translateX(var(--drift-x, 12px));
+    transform: translateY(-105vh) scale(var(--rise-scale, 0.6));
     opacity: 0;
+  }
+}
+
+@keyframes ember-sway {
+  from {
+    transform: translateX(calc(var(--sway, 10px) * -1));
+  }
+  to {
+    transform: translateX(var(--sway, 10px));
+  }
+}
+
+@keyframes ember-flicker {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -188,5 +206,9 @@
   .particle-item {
     animation: none !important;
     opacity: 0.12 !important;
+  }
+
+  .particle-item > div {
+    animation: none !important;
   }
 }
