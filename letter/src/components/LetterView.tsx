@@ -115,7 +115,7 @@ export default function LetterView({ content }: LetterViewProps) {
               {/* Cierre y barra de acciones */}
               <div className="flex flex-col justify-between gap-6 border-t border-outline-variant/30 pt-6 sm:flex-row sm:items-end">
                 <div className="flex items-center gap-2 self-start sm:self-end">
-                  {/* PHASE_3_AUDIO_SLOT */}
+                  {/* PHASE_3_AUDIO_SLOT: el audio de fondo se gestiona en page.tsx (useBackgroundAudio), sin controles visibles. */}
                 </div>
               </div>
 

@@ -13,11 +13,18 @@ import {
 
 interface AccessFormProps {
   onUnlock: (content: string) => void;
+  /** Se llama de forma síncrona dentro del clic (gesto del usuario). */
+  onAttempt?: () => void;
+  onReject?: () => void;
 }
 
 const FALLBACK_ERROR = "No pudimos abrir la carta. Inténtalo de nuevo.";
 
-export default function AccessForm({ onUnlock }: AccessFormProps) {
+export default function AccessForm({
+  onUnlock,
+  onAttempt,
+  onReject,
+}: AccessFormProps) {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -26,6 +33,7 @@ export default function AccessForm({ onUnlock }: AccessFormProps) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    onAttempt?.();
 
     startTransition(async () => {
       try {
@@ -33,9 +41,11 @@ export default function AccessForm({ onUnlock }: AccessFormProps) {
         if (result.success && result.letter) {
           onUnlock(result.letter);
         } else {
+          onReject?.();
           setError(result.error ?? FALLBACK_ERROR);
         }
       } catch {
+        onReject?.();
         setError(FALLBACK_ERROR);
       }
     });
