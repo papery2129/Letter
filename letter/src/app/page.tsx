@@ -8,15 +8,20 @@ import LetterView from "@/components/LetterView";
 import { useBackgroundAudio } from "@/hooks/useBackgroundAudio";
 import { BACKGROUND_AUDIO_SRC } from "@/lib/audio";
 
+interface LetterData {
+  content: string;
+  secondContent?: string;
+}
+
 export default function Home() {
-  const [letter, setLetter] = useState<string | null>(null);
+  const [letterData, setLetterData] = useState<LetterData | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const { audioRef, isBlocked, prime, start, abort, resume } =
     useBackgroundAudio();
 
   const handleUnlock = useCallback(
-    (content: string) => {
-      setLetter(content);
+    (content: string, secondContent?: string) => {
+      setLetterData({ content, secondContent });
       start();
     },
     [start],
@@ -30,7 +35,10 @@ export default function Home() {
     restoreSession()
       .then((result) => {
         if (!cancelled && result.success && result.letter) {
-          setLetter(result.letter);
+          setLetterData({
+            content: result.letter,
+            secondContent: result.secondLetter,
+          });
           start();
         }
       })
@@ -51,17 +59,22 @@ export default function Home() {
       {/* Único elemento de audio: persiste entre AccessForm y LetterView. */}
       <audio ref={audioRef} src={BACKGROUND_AUDIO_SRC} loop preload="auto" />
 
-      {isChecking ? null : letter === null ? (
+      {isChecking ? null : letterData === null ? (
         <AccessForm
           onUnlock={handleUnlock}
           onAttempt={prime}
           onReject={abort}
         />
       ) : (
-        <LetterView content={letter} />
+        <LetterView
+          content={letterData.content}
+          secondContent={letterData.secondContent}
+        />
       )}
 
-      {isBlocked && letter !== null ? <AudioGate onContinue={resume} /> : null}
+      {isBlocked && letterData !== null ? (
+        <AudioGate onContinue={resume} />
+      ) : null}
     </main>
   );
 }

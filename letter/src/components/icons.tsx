@@ -45,6 +45,15 @@ export function ArrowForwardIcon(props: IconProps) {
   );
 }
 
+export function ArrowBackIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" {...strokeProps} {...props}>
+      <path d="M19 12H5" />
+      <path d="m12 19-7-7 7-7" />
+    </svg>
+  );
+}
+
 export function SpinnerIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" {...strokeProps} {...props}>

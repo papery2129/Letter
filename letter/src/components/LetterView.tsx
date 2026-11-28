@@ -1,10 +1,16 @@
 "use client";
 
+import { useRef, useState } from "react";
 import EmberField from "@/components/EmberField";
-import { FingerprintIcon } from "@/components/icons";
+import {
+  ArrowBackIcon,
+  ArrowForwardIcon,
+  FingerprintIcon,
+} from "@/components/icons";
 
 interface LetterViewProps {
   content: string;
+  secondContent?: string;
 }
 
 interface LetterBlock {
@@ -28,8 +34,31 @@ function parseBlocks(content: string): LetterBlock[] {
     });
 }
 
-export default function LetterView({ content }: LetterViewProps) {
-  const blocks = parseBlocks(content);
+export default function LetterView({
+  content,
+  secondContent,
+}: LetterViewProps) {
+  const hasSecondPage = Boolean(secondContent && secondContent.trim().length > 0);
+  const [page, setPage] = useState<1 | 2>(1);
+  const [direction, setDirection] = useState<"next" | "prev" | null>(null);
+  const articleRef = useRef<HTMLElement>(null);
+
+  const activeContent =
+    page === 2 && hasSecondPage && secondContent ? secondContent : content;
+  const blocks = parseBlocks(activeContent);
+
+  const pageAnimationClass =
+    direction === "next"
+      ? "motion-safe:animate-page-next"
+      : direction === "prev"
+        ? "motion-safe:animate-page-prev"
+        : "";
+
+  const handlePageChange = (targetPage: 1 | 2) => {
+    setDirection(targetPage > page ? "next" : "prev");
+    setPage(targetPage);
+    articleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <>
@@ -46,7 +75,10 @@ export default function LetterView({ content }: LetterViewProps) {
 
       <div className="relative z-10 flex min-h-screen w-full flex-col items-center justify-center p-margin md:p-margin-desktop">
         <div className="relative flex w-full flex-col items-center justify-center px-2 py-6 sm:px-4 md:py-12">
-          <article className="relative w-full max-w-[760px] overflow-hidden rounded-lg bg-surface-container-low/95 shadow-2xl backdrop-blur-md transition-all duration-500 ease-out animate-fade-in">
+          <article
+            ref={articleRef}
+            className="relative w-full max-w-[760px] overflow-hidden rounded-lg bg-surface-container-low/95 shadow-2xl backdrop-blur-md transition-all duration-500 ease-out animate-fade-in"
+          >
             {/* Contorno luminoso */}
             <div
               aria-hidden="true"
@@ -69,6 +101,11 @@ export default function LetterView({ content }: LetterViewProps) {
                     <span className="absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75 motion-safe:animate-ping" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-outline" />
                   </span>
+                  {hasSecondPage ? (
+                    <span className="text-label-sm tracking-widest text-on-surface-variant">
+                      {page} / 2
+                    </span>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-3 text-label-md tracking-wider text-on-surface-variant">
                   <FingerprintIcon className="size-4 text-outline" />
@@ -76,40 +113,43 @@ export default function LetterView({ content }: LetterViewProps) {
                 </div>
               </header>
 
-              {/* Saludo */}
-              <div className="flex flex-col gap-1 pt-2">
-                <span className="text-label-sm tracking-widest text-outline/80 uppercase">
-                  Destinatario designado
-                </span>
-                <h1 className="text-headline-lg tracking-tight text-on-background">
-                  Para ti,
-                </h1>
-              </div>
+              {/* Contenido de la hoja activa */}
+              <div key={page} className={`flex flex-col gap-8 ${pageAnimationClass}`}>
+                {/* Saludo */}
+                <div className="flex flex-col gap-1 pt-2">
+                  <span className="text-label-sm tracking-widest text-outline/80 uppercase">
+                    {page === 2 ? "Segunda hoja" : "Destinatario designado"}
+                  </span>
+                  <h1 className="text-headline-lg tracking-tight text-on-background">
+                    {page === 2 ? "Algo más para ti," : "Para ti,"}
+                  </h1>
+                </div>
 
-              {/* Cuerpo dinámico (viene de la prop content) */}
-              <div className="flex flex-col gap-6 text-left text-body-lg leading-relaxed text-[#C4CAD4] selection:bg-primary-container selection:text-on-primary-container">
-                {blocks.map((block, index) =>
-                  block.kind === "quote" ? (
-                    <blockquote
-                      key={index}
-                      className="relative my-3 rounded-r border-l-2 border-primary-container bg-surface-container-high/40 py-2 pl-5 text-on-surface"
-                    >
-                      <p className="text-title-md tracking-wide whitespace-pre-line text-on-background/90 italic">
+                {/* Cuerpo dinámico (viene de la prop content / secondContent) */}
+                <div className="flex flex-col gap-6 text-left text-body-lg leading-relaxed text-[#C4CAD4] selection:bg-primary-container selection:text-on-primary-container">
+                  {blocks.map((block, index) =>
+                    block.kind === "quote" ? (
+                      <blockquote
+                        key={index}
+                        className="relative my-3 rounded-r border-l-2 border-primary-container bg-surface-container-high/40 py-2 pl-5 text-on-surface"
+                      >
+                        <p className="text-title-md tracking-wide whitespace-pre-line text-on-background/90 italic">
+                          {block.text}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="h-0.5 w-6 bg-outline" />
+                          <span className="text-label-sm tracking-widest text-outline uppercase">
+                            Registro de resonancia
+                          </span>
+                        </div>
+                      </blockquote>
+                    ) : (
+                      <p key={index} className="whitespace-pre-line">
                         {block.text}
                       </p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="h-0.5 w-6 bg-outline" />
-                        <span className="text-label-sm tracking-widest text-outline uppercase">
-                          Registro de resonancia
-                        </span>
-                      </div>
-                    </blockquote>
-                  ) : (
-                    <p key={index} className="whitespace-pre-line">
-                      {block.text}
-                    </p>
-                  ),
-                )}
+                    ),
+                  )}
+                </div>
               </div>
 
               {/* Cierre y barra de acciones */}
@@ -117,6 +157,25 @@ export default function LetterView({ content }: LetterViewProps) {
                 <div className="flex items-center gap-2 self-start sm:self-end">
                   {/* PHASE_3_AUDIO_SLOT: el audio de fondo se gestiona en page.tsx (useBackgroundAudio), sin controles visibles. */}
                 </div>
+                {hasSecondPage ? (
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(page === 1 ? 2 : 1)}
+                    className="group/page inline-flex cursor-pointer items-center gap-2 self-end rounded-lg border border-outline/30 bg-surface-container-high/60 px-4 py-2.5 text-label-md tracking-wider text-on-surface uppercase transition-all duration-200 hover:border-outline hover:bg-surface-container-highest hover:text-outline focus:outline-none focus-visible:ring-2 focus-visible:ring-outline"
+                  >
+                    {page === 1 ? (
+                      <>
+                        <span>Siguiente hoja</span>
+                        <ArrowForwardIcon className="size-4 transition-transform duration-200 group-hover/page:translate-x-1" />
+                      </>
+                    ) : (
+                      <>
+                        <ArrowBackIcon className="size-4 transition-transform duration-200 group-hover/page:-translate-x-1" />
+                        <span>Hoja anterior</span>
+                      </>
+                    )}
+                  </button>
+                ) : null}
               </div>
 
               <footer className="flex flex-col items-center justify-center gap-2 pt-4 text-center select-none">

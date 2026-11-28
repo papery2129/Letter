@@ -12,7 +12,7 @@ import {
 } from "@/components/icons";
 
 interface AccessFormProps {
-  onUnlock: (content: string) => void;
+  onUnlock: (content: string, secondContent?: string) => void;
   /** Se llama de forma síncrona dentro del clic (gesto del usuario). */
   onAttempt?: () => void;
   onReject?: () => void;
@@ -39,7 +39,7 @@ export default function AccessForm({
       try {
         const result = await verifyAccess(name);
         if (result.success && result.letter) {
-          onUnlock(result.letter);
+          onUnlock(result.letter, result.secondLetter);
         } else {
           onReject?.();
           setError(result.error ?? FALLBACK_ERROR);
@@ -110,7 +110,9 @@ export default function AccessForm({
                     required
                     disabled={isPending}
                     aria-invalid={error ? true : undefined}
-                    aria-describedby={error ? "access-error" : undefined}
+                    aria-describedby={
+                      error ? "access-hint access-error" : "access-hint"
+                    }
                     className="w-full rounded-lg border border-outline/30 bg-surface-container-low py-3.5 pr-11 pl-11 text-body-md text-on-surface transition-all duration-200 outline-none placeholder:text-on-surface-variant/60 focus:border-secondary focus:shadow-[0_0_0_1px_#A31621,0_0_15px_rgba(163,22,33,0.35),0_0_25px_rgba(27,154,170,0.2)] disabled:opacity-80 aria-[invalid=true]:border-secondary"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-space-md">
@@ -126,6 +128,12 @@ export default function AccessForm({
                     </button>
                   </div>
                 </div>
+                <p
+                  id="access-hint"
+                  className="pt-0.5 text-body-sm text-on-surface-variant/85"
+                >
+                  Escribe el nombre o apodo con el que más te ubico (o como suelo llamarte).
+                </p>
               </div>
 
               <div className="pt-space-xs">

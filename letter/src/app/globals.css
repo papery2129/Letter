@@ -128,6 +128,8 @@
   /* Animaciones */
   --animate-rim-light: rim-light-pulse 4s ease-in-out infinite alternate;
   --animate-fade-in: fade-in 0.7s ease-out both;
+  --animate-page-next: page-turn-next 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-page-prev: page-turn-prev 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
 
   @keyframes rim-light-pulse {
     0% {
@@ -150,6 +152,28 @@
     from {
       opacity: 0;
       transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes page-turn-next {
+    from {
+      opacity: 0;
+      transform: translateX(18px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes page-turn-prev {
+    from {
+      opacity: 0;
+      transform: translateX(-18px);
     }
     to {
       opacity: 1;

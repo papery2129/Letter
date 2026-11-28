@@ -1,12 +1,13 @@
 "use server";
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { normalizeText } from "@/lib/normalize";
 
 export interface VerifyAccessResult {
   success: boolean;
   letter?: string;
+  secondLetter?: string;
   error?: string;
 }
 
@@ -14,19 +15,34 @@ const GENERIC_ERROR =
   "No pudimos abrir la carta. Revisa el nombre e inténtalo de nuevo.";
 const MAX_INPUT_LENGTH = 100;
 const SESSION_COOKIE = "letter_session";
+const FALLBACK_SESSION_SALT = "letter-private-session-v1";
 
-function getAllowedNames(): Set<string> {
-  const raw = process.env.ALLOWED_NAMES ?? "";
+function getSigningKey(): string {
+  // Deriva una clave estable en el servidor a partir de las variables privadas ya configuradas.
+  return createHash("sha256")
+    .update(FALLBACK_SESSION_SALT)
+    .update("\0")
+    .update(process.env.ALLOWED_NAMES ?? "")
+    .update("\0")
+    .update(process.env.SPECIAL_NAMES ?? "")
+    .update("\0")
+    .update(process.env.LETTER_CONTENT ?? "")
+    .update("\0")
+    .update(process.env.SPECIAL_LETTER_CONTENT ?? "")
+    .digest("hex");
+}
+
+function parseNameList(raw: string | undefined): Set<string> {
+  if (!raw) return new Set();
   return new Set(
     raw
-      .split(",")
+      .split(/[\n\r,]+/)
       .map(normalizeText)
       .filter((name) => name.length > 0),
   );
 }
 
-function getLetterContent(): string | null {
-  const raw = process.env.LETTER_CONTENT;
+function getLetterText(raw: string | undefined): string | null {
   if (!raw || raw.trim().length === 0) return null;
   // Soporta "\n" literales (p. ej. paneles de hosting sin multilínea).
   return raw.replace(/\\n/g, "\n");
@@ -44,17 +60,9 @@ function safeEqualHex(a: string, b: string): boolean {
 }
 
 async function startSession(normalizedName: string): Promise<void> {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 16) {
-    console.error(
-      "[verifyAccess] Falta SESSION_SECRET (mín. 16 caracteres): la sesión no se conservará al recargar.",
-    );
-    return;
-  }
-
   const cookieStore = await cookies();
   // Sin maxAge/expires: cookie de sesión (se borra al cerrar el navegador).
-  cookieStore.set(SESSION_COOKIE, signName(normalizedName, secret), {
+  cookieStore.set(SESSION_COOKIE, signName(normalizedName, getSigningKey()), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -69,29 +77,44 @@ export async function verifyAccess(name: unknown): Promise<VerifyAccessResult> {
   }
 
   const normalized = normalizeText(name);
-  const allowedNames = getAllowedNames();
-  const letter = getLetterContent();
+  const allowedNames = parseNameList(process.env.ALLOWED_NAMES);
+  const specialNames = parseNameList(process.env.SPECIAL_NAMES);
+  const letter = getLetterText(process.env.LETTER_CONTENT);
+  const secondLetter = getLetterText(process.env.SPECIAL_LETTER_CONTENT);
 
-  if (allowedNames.size === 0 || letter === null) {
+  if ((allowedNames.size === 0 && specialNames.size === 0) || letter === null) {
     console.error(
-      "[verifyAccess] Faltan ALLOWED_NAMES o LETTER_CONTENT en el entorno.",
+      "[verifyAccess] Faltan ALLOWED_NAMES/SPECIAL_NAMES o LETTER_CONTENT en el entorno.",
     );
     return { success: false, error: GENERIC_ERROR };
   }
 
-  if (normalized.length === 0 || !allowedNames.has(normalized)) {
+  const isSpecial = normalized.length > 0 && specialNames.has(normalized);
+  const isAllowed =
+    isSpecial || (normalized.length > 0 && allowedNames.has(normalized));
+
+  if (!isAllowed) {
     return { success: false, error: GENERIC_ERROR };
   }
 
+  if (isSpecial && secondLetter === null) {
+    console.error(
+      "[verifyAccess] Hay SPECIAL_NAMES configurado pero falta SPECIAL_LETTER_CONTENT.",
+    );
+  }
+
   await startSession(normalized);
-  return { success: true, letter };
+  return {
+    success: true,
+    letter,
+    ...(isSpecial && secondLetter !== null ? { secondLetter } : {}),
+  };
 }
 
 // Restaura la sesión al recargar: valida la cookie firmada contra la lista actual.
 export async function restoreSession(): Promise<VerifyAccessResult> {
-  const secret = process.env.SESSION_SECRET;
-  const letter = getLetterContent();
-  if (!secret || secret.length < 16 || letter === null) {
+  const letter = getLetterText(process.env.LETTER_CONTENT);
+  if (letter === null) {
     return { success: false };
   }
 
@@ -99,10 +122,29 @@ export async function restoreSession(): Promise<VerifyAccessResult> {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return { success: false };
 
-  let isValid = false;
-  for (const allowedName of getAllowedNames()) {
-    if (safeEqualHex(token, signName(allowedName, secret))) isValid = true;
+  const signingKey = getSigningKey();
+  const allowedNames = parseNameList(process.env.ALLOWED_NAMES);
+  const specialNames = parseNameList(process.env.SPECIAL_NAMES);
+  const secondLetter = getLetterText(process.env.SPECIAL_LETTER_CONTENT);
+
+  let isAllowed = false;
+  let isSpecial = false;
+
+  for (const allowedName of allowedNames) {
+    if (safeEqualHex(token, signName(allowedName, signingKey))) isAllowed = true;
+  }
+  for (const specialName of specialNames) {
+    if (safeEqualHex(token, signName(specialName, signingKey))) {
+      isAllowed = true;
+      isSpecial = true;
+    }
   }
 
-  return isValid ? { success: true, letter } : { success: false };
+  if (!isAllowed) return { success: false };
+
+  return {
+    success: true,
+    letter,
+    ...(isSpecial && secondLetter !== null ? { secondLetter } : {}),
+  };
 }
