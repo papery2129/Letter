@@ -1,5 +1,6 @@
 "use client";
 
+import EmberField from "@/components/EmberField";
 import { FingerprintIcon } from "@/components/icons";
 
 interface LetterViewProps {
@@ -41,34 +42,10 @@ export default function LetterView({ content }: LetterViewProps) {
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,rgba(27,154,170,0.04),rgba(13,14,18,0)_70%)]"
       />
+      <EmberField />
 
       <div className="relative z-10 flex min-h-screen w-full flex-col items-center justify-center p-margin md:p-margin-desktop">
         <div className="relative flex w-full flex-col items-center justify-center px-2 py-6 sm:px-4 md:py-12">
-          {/* Destellos ambientales */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden select-none"
-          >
-            <svg className="h-full w-full opacity-60" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <radialGradient id="reishiGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#1B9AAA" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#1B9AAA" stopOpacity="0" />
-                </radialGradient>
-                <radialGradient id="crimsonGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#920317" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#920317" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              <circle className="motion-safe:animate-pulse" cx="15%" cy="20%" r="1.5" fill="url(#reishiGlow)" style={{ animationDuration: "4s" }} />
-              <circle className="motion-safe:animate-pulse" cx="85%" cy="30%" r="2" fill="url(#reishiGlow)" style={{ animationDuration: "6s" }} />
-              <circle className="motion-safe:animate-pulse" cx="25%" cy="75%" r="1.2" fill="url(#crimsonGlow)" style={{ animationDuration: "5s" }} />
-              <circle className="motion-safe:animate-pulse" cx="78%" cy="85%" r="1.8" fill="url(#reishiGlow)" style={{ animationDuration: "7s" }} />
-              <circle className="motion-safe:animate-pulse" cx="50%" cy="12%" r="1.5" fill="url(#crimsonGlow)" style={{ animationDuration: "4.5s" }} />
-              <circle className="motion-safe:animate-pulse" cx="92%" cy="65%" r="1" fill="url(#reishiGlow)" style={{ animationDuration: "8s" }} />
-            </svg>
-          </div>
-
           <article className="relative w-full max-w-[760px] overflow-hidden rounded-lg bg-surface-container-low/95 shadow-2xl backdrop-blur-md transition-all duration-500 ease-out animate-fade-in">
             {/* Contorno luminoso */}
             <div
